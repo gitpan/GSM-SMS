@@ -1,5 +1,23 @@
 Revision history for Perl extension GSM::SMS.
 
+0.162 Fri Jan  2 19:35:46 PST 2004
+	- An bugfix release with some old bugs fixed. This is the last of the
+	  0.16X seriesn as 0.17X is being build for WAP Push and preliminary
+	  MMS support.
+
+	Sat Jul  5 16:47:57 PDT 2003
+	- Fixed the transport.conf files. Changed '-' to '_' as a word separator.
+	  Thanks to Grzegorz Wioniewski for pointing this one out.
+
+	Tue Apr  8 00:17:18 PDT 2003
+	- Changed the acl for the File transport by default. It now expects an 
+	  msisdn starting with 555. Otherwise it would eat up all the outgoing
+	  request when using a default install.
+	- GSM::SMS::NBS::receive now supports the reporting of a CSCA. This is just
+	  a quick hack. Work is underway to rewrite PDU.pm and the Stack.pm in such
+	  a way that all fields of the incoming PDU and complete message can be
+	  reached.
+
 	Wed Feb  5 00:21:55 PST 2003
 	- It seems that the background issue of the images is related to the
 	  new release of ImageMagick, which seems to invert some monochrome
@@ -8,7 +26,8 @@ Revision history for Perl extension GSM::SMS.
 	- I merged Marcel Brouillet's patch for the background of images. Black is
 	  now always background, white is foreground.
 
-	Sat Jan 11 15:21:17 PST 2003
+
+0.161	Sat Jan 11 15:21:17 PST 2003
 	- Now I set the version of all modules to the one specified in the
 	  Makefile.PL before release (make setversion). 
 

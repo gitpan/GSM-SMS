@@ -6,7 +6,7 @@ use File::Spec;
 use FindBin qw($Bin);
 use lib "$Bin/lib";
 
-our $VERSION = "0.161";
+our $VERSION = "0.162";
 
 my $term;
 

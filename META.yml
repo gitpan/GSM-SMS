@@ -1,0 +1,23 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         GSM-SMS
+version:      0.162
+version_from: 
+installdirs:  site
+requires:
+    Data::Dumper:                  0
+    File::Path:                    0
+    File::stat:                    0
+    File::Temp:                    0
+    HTTP::Request:                 0
+    Image::Magick:                 0
+    Log::Agent:                    0
+    LWP::Simple:                   0
+    LWP::UserAgent:                0
+    MIME::Base64:                  0
+    Test::More:                    0
+    URI::Escape:                   0
+    URI::URL:                      0
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.17

@@ -566,7 +566,7 @@ sub _config_transport_file {
 		_create_directory( $directory ) unless (stat($directory));
 
 		$originator = prompt( "What's the originator?", "GSM::SMS" );
-		$acl = prompt( "What's the access control list regex?", ".*" );
+		$acl = prompt( "What's the access control list regex?", "^555" );
 
 		print <<EOT;
 File transport summary
