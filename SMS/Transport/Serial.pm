@@ -95,7 +95,9 @@ sub receive {
 	}
 	if ($msg) {
 		$$pduref = $msg->{MSG};
-		$self->_delete($msg->{ID});
+		if ($msg->{LENGTH}) {
+			$self->_delete($msg->{ID});
+		}
 		return 0;
 	}
 	return -1;
@@ -197,8 +199,8 @@ sub _init {
     	$self->{port}->stopbits(1);
 
 	# Try to communicate to the port
+	$self->_at("ATZ\r", $__TO);
 	$self->_at("ATE0\r", $__TO);
-	my $res = $self->_at("AT\r", $__TO);
 	my $res = $self->_at("AT\r", $__TO);
 
 	unless ($res =~/OK/is) {
@@ -223,8 +225,9 @@ sub _getSMS {
 	# to pdu mode
 	$self->_at("AT+CMGF=0\r", $__TO);
 
-	# loop from 1 to 10 to get messages
-	for (my $i=1; $i<=10; $i++) {
+	# loop from 1 to cfg->memorylimit to get messages
+	my $limit = $self->{cfg}->{"memorylimit"} || 10;
+	for (my $i=1; $i<=$limit; $i++) {
 		my $res = $self->_at( "AT+CMGR=$i\r", $__TO );
 
 		next if ($res=~/ERROR/ig);

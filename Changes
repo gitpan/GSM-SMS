@@ -1,10 +1,40 @@
 Revision history for Perl extension GSM::SMS.
 
-0.01  Sun Jun 17 01:06:12 2001
+0.13 Tue Jul 24 22:45:37 CEST 2001
+	- Updated examples/slashdot/slashdot to be verbose
+	  on not being able to send. Using the new return
+	  values from GSM::SMS::NBS.
+
+	 Sat Jul 21 17:57:11 CEST 2001
+	- Changed the return value in NBS.pm of all functions.
+	  The return value was 'hardwired' to -1, meaning success.
+	  Now this value has changed to the C convention:
+	 	-1 means failure.
+		 0 means success.
+	  ( This oddity needs to get in the release documentation,
+        as it can break existing implementations. )
+
+0.12 Sat Jul 14 23:27:00 CEST 2001
+	- Adding support for an XmlRpc node transport.
+	  This transport is application specific, it used by the
+	  mercury project, a small SMS Messaging Server build
+	  on top of the GSM::SMS package.
+
+0.11 Sat Jul 14 20:52:24 CEST 2001
+	- MCube (www.mcube.be) support for text messages implemented
+	  Binary support does not seem to work correctly for now.
+	- Implemented optimised delete for Serial transport.
+	  Attributed by Toni Mattila <tontsa@asiaonline.net.my>.
+	- New config parameter for Serial transport:
+		memorylimit	= nn
+		( nn = 10 for WaveCom, nn = 15 for Siemens C25 )
+	  Pointed out by Toni Mattila <tontsa@asiaonline.net.my>
+
+0.1  Sun Jun 17 01:06:12 2001
 	- Preparing launch on CPAN
 	- added documentation and examples
 
-0.00  Sun Jun  3 21:46:04 2001
+0.0  Sun Jun  3 21:46:04 2001
 	- original version; created by h2xs 1.20 with options
 		-XA -n GSM::SMS
 	- used the iSMS library modules and put them in another base

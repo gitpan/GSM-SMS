@@ -4,6 +4,7 @@ Makefile.PL
 test.pl
 README
 DISCLAIMER
+novelsoft_example.conf
 SMS/Config.pm
 SMS/Log.pm
 SMS/NBS.pm
@@ -16,6 +17,7 @@ SMS/Transport.pm
 SMS/Transport/Transport.pm
 SMS/Transport/NovelSoft.pm
 SMS/Transport/Serial.pm
+SMS/Transport/XmlRpc.pm
 SMS/OTA/OTA.pm
 SMS/OTA/Bitmap.pm
 SMS/OTA/CLIicon.pm

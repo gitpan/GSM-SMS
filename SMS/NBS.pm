@@ -2,7 +2,7 @@ package GSM::SMS::NBS;
 
 use vars qw($VERSION);
 
-$VERSION = '0.1';
+$VERSION = '0.13';
 
 use GSM::SMS::NBS::Message;
 use GSM::SMS::NBS::Stack;
@@ -35,13 +35,15 @@ sub new {
 #
 sub sendto {
 	my ($self, $msisdn, $message, $dport, $sport, $dcs ) = @_;
+	my $ret;
 
 	my $transport = $self->{'__TRANSPORT__'};
 
 	my $nbs_message = GSM::SMS::NBS::Message->new();
 	$nbs_message->create($msisdn, $message, $dport, $sport, $dcs);
 	foreach my $frame ( @{$nbs_message->get_frames()} ) {
-		$transport->send($msisdn, $frame);
+		# transport->send returns -1 on failure.
+		$ret = -1 if $transport->send($msisdn, $frame);
 	}
 }
 
@@ -56,8 +58,7 @@ sub sendRTTTL {
 	}
 
 	my $music = OTARTTTL_makestream($rtttlstring);
-	$self->sendto( $msisdn, $music, OTARTTTL_PORT);
-	return -1;
+	return $self->sendto( $msisdn, $music, OTARTTTL_PORT);
 }
 
 #
@@ -67,8 +68,7 @@ sub sendOperatorLogo_b64 {
 	my ($self, $msisdn, $country, $operator, $b64, $format) = @_;
 	
 	my $ol = OTAOperatorlogo_fromb64( $country, $operator, $b64, $format );
-	$self->sendto( $msisdn, $ol, OTAOperatorlogo_PORT);
-	return -1;
+	return $self->sendto( $msisdn, $ol, OTAOperatorlogo_PORT);
 }
 
 #
@@ -78,8 +78,7 @@ sub sendOperatorLogo_file {
 	my ($self, $msisdn, $country, $operator, $file ) = @_;
 
 	my $ol = OTAOperatorlogo_fromfile( $country, $operator, $file );
-	$self->sendto($msisdn, $ol, OTAOperatorlogo_PORT);
-	return -1;
+	return $self->sendto($msisdn, $ol, OTAOperatorlogo_PORT);
 }
 
 #
@@ -89,8 +88,7 @@ sub sendGroupGraphic_b64 {
 	my ($self, $msisdn, $b64, $format) = @_;
 
 	my $gg = OTACLIicon_fromb64( $b64, $format );
-	$self->sendto($msisdn, $gg, OTACLIicon_PORT);
-	return -1;
+	return $self->sendto($msisdn, $gg, OTACLIicon_PORT);
 }
 
 #
@@ -101,8 +99,7 @@ sub sendGroupGraphic_file {
 
 	my $gg = OTACLIicon_fromfile( $file );
 	
-	$self->sendto($msisdn, $gg, OTACLIicon_PORT);
-	return -1;
+	return $self->sendto($msisdn, $gg, OTACLIicon_PORT);
 }
 
 #
@@ -112,8 +109,7 @@ sub sendVCard {
 	my ($self, $msisdn, $lname, $fname, $phone) = @_;
 
 	my $vcard = OTAVcard_makestream( $last, $first, $phone );
-	$self->sendto( $msisdn, $vcard, OTAVcard_PORT);
-	return -1;
+	return $self->sendto( $msisdn, $vcard, OTAVcard_PORT);
 }
 
 #
@@ -121,12 +117,13 @@ sub sendVCard {
 #
 sub sendConfig {
 	my ($self, $msisdn, $bearer, $connection, $auth, $type, $speed, $proxy, $home, $uid, $pwd, $phone, $name) = @_;
-	
+
+	my $ret = -1;
 	my $ota = OTAConfig_makestream(  $bearer, $connection, $auth, $type, $speed, $proxy, $home, $uid, $pwd, $phone, $name);
 	if ( $ota ) {
-		$self->sendto( $msisdn, $ota, OTAConfig_PORT, 9200);
+		$ret = $self->sendto( $msisdn, $ota, OTAConfig_PORT, 9200);
 	}
-	return -1;
+	return $ret;
 }
 
 #
@@ -134,21 +131,20 @@ sub sendConfig {
 #
 sub sendSMSTextMessage {
 	my ($self, $msisdn, $msg, $multipart) = @_;
-	
-	my $cnt;
+	my $cnt = 0;	
+	my $ret = 0;
 	if ( $multipart ) {
 		while (length($msg) > 0) {
 			my $xmsg = substr($msg, 0, (length($msg)<160)?length($msg):160 );
 			$msg = substr($msg, 160, length($msg) - 160);
-			$self->sendto( $msisdn, $xmsg, undef, undef, '7bit');
+			$ret = -1 if $self->sendto( $msisdn, $xmsg, undef, undef, '7bit');
 			$cnt++;
 		}
 	} else {
 		$msg = substr($msg, 0, (length($msg)<160)?length($msg):160 );
-		$self->sendto( $msisdn, $msg, undef , undef , '7bit');
-		$cnt=1;
+		$ret = $self->sendto( $msisdn, $msg, undef , undef , '7bit');
 	}
-	return $cnt;
+	return ($ret==-1)?$ret:$cnt;
 }
 
 #
@@ -226,6 +222,7 @@ Look into the transport.cfg files in the examples on how to set it up.
 	my $nbs = GSM::SMS::NBS->new( $configfile );
 
 This is the constructor, it expects a file name of a transport configuration as an argument.
+All functions return -1 on failure, 0 on success.
 
 =head2 sendSMSTextMessage
 

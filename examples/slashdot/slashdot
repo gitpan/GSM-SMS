@@ -67,6 +67,9 @@ verb( join( " ", split( //, "SLASHDOT HEADLINES") ) . "\n\n" );
 
 my $nbs = GSM::SMS::NBS->new( $ARG_TRANSPORTCFG );
 
+die "Sorry ... could not active NBS stack ... check transport logfiles\n"
+	unless $nbs;
+
 my $message;
 my $timestamp;
 my $transportname;
@@ -134,7 +137,9 @@ EOT
 					verb( "=" x 75 . "\n" );
 					verb( $msg[$i] );
 					verb( "." x 75 . "\n\n");
-					$nbs->sendSMSTextMessage( $msisdn, $msg[$i] );
+					if ($nbs->sendSMSTextMessage( $msisdn, $msg[$i] )) {
+						verb("!ERROR SENDING! *check logfile*\n");
+					}
 				}
 			}
 		}	

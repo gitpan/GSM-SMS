@@ -19,7 +19,15 @@ For the moment the package comes with support for the following Smart Messaging 
 	* VCard
 	* OTA Configuration for WAP phones
 
+NEW IN THIS RELEASE
+	Look in the 'Changes' file for a complete review.
 
+	* GSM::SMS::NBS returns success and failure correctly	  
+	* XmlRpc Transport for remote node functionality.
+	  ( Look at the iSMS package for example, http://www.tektonica.com )
+	* Faster SMS delete on Serial transport
+	* Supports more GSM modems ( Siemens ) by use of extra
+	  config parameter ( memorylimit ).
 
 PREREQUISITES
 
@@ -79,7 +87,6 @@ expose the send functions in an XMLRPC way, thus creating a SMS webservice.
 BUGS
 
 Probably a lot. I hope I get a lot of feedback so we can figure the bugs out and start fixing them!
-
 
 
 AUTHOR
