@@ -6,6 +6,8 @@ require  Exporter;
  
 @EXPORT = qw( 	OTAOperatorlogo_makestream  
 		OTAOperatorlogo_PORT	
+		OTAOperatorlogo_fromb64
+		OTAOperatorlogo_fromfile
 		); 
 
 $VERSION = '0.1';

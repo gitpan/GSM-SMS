@@ -1,5 +1,9 @@
 Revision history for Perl extension GSM::SMS.
 
+0.141 Sat Aug 18 16:11:35 CEST 2001
+	- Fixed export of OTAOperatorlogo_from{file,b64} in GSM::SMS::OTA::
+	  Operatorlogo.
+
 0.14  Wed Aug  8 19:13:44 CEST 2001
 	- Release for 1.4 
 

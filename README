@@ -33,6 +33,7 @@ formats:
 NEW IN THIS RELEASE
 	Look in the 'Changes' file for a complete review and credits.
 
+	* GSM::SMS::NBS::sendOperatorLogo_from{file,b64} now works.
 	* GSM::SMS::Support::RTTTL2MIDI converts rtttl strings to midi.
 	* Serial transport wait correctly for the modem to come up when
 	  reading SIM card information (phonebook, ...).

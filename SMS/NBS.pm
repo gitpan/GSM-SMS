@@ -2,7 +2,7 @@ package GSM::SMS::NBS;
 
 use vars qw($VERSION);
 
-$VERSION = '0.14';
+$VERSION = '0.141';
 
 use GSM::SMS::NBS::Message;
 use GSM::SMS::NBS::Stack;
