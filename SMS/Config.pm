@@ -1,11 +1,15 @@
 package GSM::SMS::Config;
 use strict;
-use vars qw( $VERSION );
+use vars qw( $VERSION @EXPORT );
+
+use base qw( Exporter );
+@EXPORT = qw( &setup );
 
 use Carp;
 use Log::Agent;
+use Term::ReadLine;
 
-$VERSION = '0.3';
+$VERSION = '0.4';
 
 =head1 NAME
 
@@ -55,6 +59,23 @@ sub new {
 	$self->read_config( $self->{_config_file}, $self->{_check} );
 
 	return $self;
+}
+
+=item B<setup> - run the setup script
+
+=cut
+
+sub setup {
+	print "Running setup on GSM::SMS\n";
+}
+
+=item B<save_default> - save this configuration as the default
+
+=cut
+
+sub save_default {
+	my ($self) = @_;
+
 }
 
 =item B<read_config> - read a configuration file

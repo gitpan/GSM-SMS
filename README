@@ -57,7 +57,7 @@ Following packages are mandatory
 
 INSTALL
 
-I *should* be a simple:
+It *should* be a simple:
 	perl Makefile.PL
 	make
 	make install

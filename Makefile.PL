@@ -3,7 +3,7 @@ use Term::ReadLine;
 use File::stat;
 use File::Path;
 
-my $term = Term::ReadLine->new();
+my $term;
 
 WriteMakefile(
     'NAME'			=> 'GSM::SMS',
@@ -30,6 +30,9 @@ WriteMakefile(
 );
 
 sub configure {
+
+	$term = new Term::ReadLine 'GSM::SMS configurator';
+
 	print <<EOT;
    
      ____ ____  __  __     ____  __  __ ____
@@ -53,7 +56,7 @@ by providing an explicit configuration file.
 EOT
 	my $in;
 	$in = $term->readline('Do you want to configurate the package? (y/n) > ');
-	return if $in =~ /[nN]/;
+	return {} if $in =~ /[nN]/;
 	print "\nThanks for proceeding!";
 
 	# Configurate system wide settings
@@ -130,6 +133,7 @@ EOT
 EOT
 	);
 
+	return {};
 }
 
 sub config_transport_serial {

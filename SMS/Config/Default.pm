@@ -1,6 +1,14 @@
 package GSM::SMS::Config::Default;
 
-my $Config  = {
-		'default' => [ {} ]
-		};
+$Config = {	
+	'default' => [
+					{
+					'router' => 'Simple',
+					'spooldir' => '/var/spool/gsmsms',
+					'log' => '/var/log/gsmsms',
+					'testmsisdn' => ''
+					}
+				 ],
+
+	};
 1;
