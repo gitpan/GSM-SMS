@@ -5,6 +5,10 @@ use Data::Dumper;
 $VERSION = '0.1';
 
 # $__NBSSTACK_PRINT++;
+
+# Keep the packets alive for 1 day 
+$__TIME_TO_LIVE = 60*60*24;
+
 # Constructor
 sub new {
     my $proto = shift;
@@ -25,8 +29,10 @@ sub receive {
 
 	my ($stack) = $self->{STACK};
 	my $t = $self->{TRANSPORT};
-	
-	while ($self->_complete_message_on_stack($stack, $ref_oa, $ref_msg, $ref_timestamp, $ref_transport, $ref_port)) {	
+
+	$self->_prt( "entering receive" );
+
+ 	while ($self->_complete_message_on_stack($stack, $ref_oa, $ref_msg, $ref_timestamp, $ref_transport, $ref_port)) {	
 		
 		$self->_prt( "CHECK\n" );
 
@@ -47,6 +53,7 @@ sub receive {
 
 		select(undef, undef, undef, 0.25);
 		return -1 unless $block;
+		$self->_prt( "BLOCKING LOOP" );
 	}
 	return 0;
 }
@@ -70,10 +77,12 @@ sub _complete_message_on_stack {
 			# Check if we need to kill this datagram -> TTL expired
 			if ( (time - $dg->{Timestamp}) > $__TIME_TO_LIVE) {
 				$self->_prt( "TTL expired!\n" );
+				$self->_prt( $__TIME_TO_LIVE );
+				$self->_prt( $dg->{Timestamp} );
+				$self->_prt( "------------------" );			
 				delete $oa->{$j};
 				next;
 			}
-
 
 			my $decoded_pdu = $dg->{Fragments}->[1];
 			

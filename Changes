@@ -1,5 +1,10 @@
 Revision history for Perl extension GSM::SMS.
 
+0.142 Wed Dec 12 23:13:04 CET 2001
+	- Fixed the mysteriously vanishing of SMS messages from the GSM modem.
+	  I can't reproduce the error anymore, since I fixed the 
+	  TTL (Time To Live) in Stack.pm.
+
 0.141 Sat Aug 18 16:11:35 CEST 2001
 	- Fixed export of OTAOperatorlogo_from{file,b64} in GSM::SMS::OTA::
 	  Operatorlogo.
