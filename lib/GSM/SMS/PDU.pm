@@ -4,7 +4,7 @@ use vars qw( $VERSION );
 # (c) 1999 tektonica
 # author: Johan Van den Brande 
 
-$VERSION = '0.1';
+$VERSION = "0.161";
 
 sub new {
     my $proto = shift;

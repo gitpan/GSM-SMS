@@ -6,11 +6,13 @@ use File::Spec;
 use FindBin qw($Bin);
 use lib "$Bin/lib";
 
+our $VERSION = "0.161";
+
 my $term;
 
 WriteMakefile(
     'NAME'			=> 'GSM::SMS',
-    'VERSION_FROM'	=> 'lib/GSM/SMS/NBS.pm',
+    'VERSION'		=> $VERSION,
 	'ABSTRACT'		=> 'Perl Modules For Smart Messaging',
     'PREREQ_PM'		=> {
 		'Test::More'		=> 0,
@@ -49,4 +51,19 @@ sub configure {
 		print "Configuration done.\n";
 	}
 	return {};
+}
+
+package MY;
+
+sub postamble {
+	my $post = shift->SUPER::postamble(@_);
+
+	$post .= <<EOT;
+
+setversion:
+	find . -exec perl -pi -e 's/\\\$\$VERSION\\s*=.+;\$\$/\\\$\$VERSION = "0.161";
+
+EOT
+
+	return $post;
 }

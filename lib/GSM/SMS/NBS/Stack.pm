@@ -2,7 +2,7 @@ package GSM::SMS::NBS::Stack;
 use GSM::SMS::PDU;
 use Data::Dumper;
 
-$VERSION = '0.1';
+$VERSION = "0.161";
 
 # $__NBSSTACK_PRINT++;
 

@@ -2,7 +2,7 @@ package GSM::SMS::NBS;
 
 use vars qw($VERSION);
 
-$VERSION = '0.160';
+$VERSION = "0.161";
 
 =head1 NAME
 

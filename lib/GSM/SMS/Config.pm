@@ -12,8 +12,8 @@ use Config;
 use File::Path;
 use File::Spec;
 
-$VERSION = '0.4';
-$REVISION = '$Revision: 1.4 $';
+$VERSION = "0.161";
+$REVISION = '$Revision: 1.6 $';
 
 =head1 NAME
 
