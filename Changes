@@ -1,0 +1,12 @@
+Revision history for Perl extension GSM::SMS.
+
+0.01  Sun Jun 17 01:06:12 2001
+	- Preparing launch on CPAN
+	- added documentation and examples
+
+0.00  Sun Jun  3 21:46:04 2001
+	- original version; created by h2xs 1.20 with options
+		-XA -n GSM::SMS
+	- used the iSMS library modules and put them in another base
+	  directory (class path). ( Tektonica::iSMS -> GSM::SMS ). I did this
+	  to able to release them on CPAN. 

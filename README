@@ -1,0 +1,104 @@
+								 GSM::SMS
+					 Perl Modules For Smart Messaging
+
+
+
+INTRODUCTION
+
+This set of modules allows you to send and receive SMS messages. Besides text messages you can also use Smart Messages, also known as ringing tones, groupgraphics, vcards etc...
+
+Out of the box, it comes with a serial transport and a transport for Novelsoft, a HTTP based SMSC (http://www.sms-wap.com ). To use the serial transport you will need a GSM modem, like the wavecom WMOD2B ( http://www.wavecom.com ). If you want to receive SMS messages, the serial solution is the only one for the moment.You even can have some success with running the gnokii project to power a Nokia 6110 or something, but I have not tested this. Other options are the M20 from Siemens and the A1 or A2 from Falcom.
+
+The module that is the most interesting for you is probably the GSM::SMS::NBS module, as this is the high level interface you are supposed to use. Please look at the examples to see how you use the library.
+
+For the moment the package comes with support for the following Smart Messaging formats:
+	
+	* RTTTL, ringing tones
+	* Caller Line Identification logos
+	* Operator logos
+	* VCard
+	* OTA Configuration for WAP phones
+
+
+
+PREREQUISITES
+
+Following packages are mandatory
+
+	* Data::Dumper
+	* MIME::Base64
+	* Image::Magick
+	* LWP
+	* Device::SerialPort
+
+
+
+INSTALL
+
+I *should* be a simple:
+	perl Makefile.PL
+	make
+	make install
+
+
+
+CONFIGURATION
+
+This is important, because the transports need to be configured.
+The best you can do is look in the examples for the file transport.cfg.
+This file contains the necessary settings for the transports and are
+(clearly) documented. As time permits I will be expanding the documentation.
+
+SERIAL TRANSPORT
+
+A note about the serial transport. To use this you need to have Device::SerialPort installed. For the moment this also means that this part is not Win32 compliant, as another module ( Win32::SerialPort ) is used on the other system. Expect an update that also works on window systems.
+
+A problem that can arise when using the serial tarnsport is the setting of the service center address. If this happens, or if you want to set this manually, use the following command(s) in your favourite comms program. I use minicom ...
+
+	>minicom -s
+	AT+CPIN?
+		Check for pincode
+	AT+CPIN="nnnn"
+		Set pincode. Important ... only 3 tries!!!
+	AT+CSCA?
+		Check for service center address
+	AT+CSCA="+32475161616"
+		Set service center address. ( This one is for proximus belgium ).
+
+EXAMPLES
+
+Look in the examples directory, this should get you started.
+The most complex one is the smartmessagingserver, allowing you to request a
+rttl or groupgraphic by sending an sms message. The slashdot example allows
+you to receive the latest slashdot headlines in a SMS message. The ideas are
+ofcourse endless. I've build an application on top of these modules that
+expose the send functions in an XMLRPC way, thus creating a SMS webservice.
+
+
+
+BUGS
+
+Probably a lot. I hope I get a lot of feedback so we can figure the bugs out and start fixing them!
+
+
+
+AUTHOR
+
+Johan Van den Brande
+johan@vandenbrande.com
+
+
+
+COPYRIGHT
+
+Copyright (c) 1999-2001 Johan Van den Brande
+All rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself. 
+
+DISCLAIMER
+
+I take no responsibility for anything that can go wrong or can be done wrong with this piece of software.
+
+Please look at the file DISCLAIMER.

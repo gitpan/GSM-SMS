@@ -1,0 +1,156 @@
+#!/usr/bin/perl
+
+#
+# Load some modules
+use GSM::SMS::Log;
+use GSM::SMS::Config;
+use GSM::SMS::NBS;
+use Getopt::Long;
+
+#
+# No output buffering
+$|++;
+
+
+
+#
+# Arguments
+my $ARG_CONFIG;
+my $ARG_VERBOSE;
+GetOptions( 
+	"config:s" => \$ARG_CONFIG,
+	"verbose" => \$ARG_VERBOSE	
+ );
+
+unless ( $ARG_CONFIG ) {
+print <<EOT;
+Usage: $0 --config=<config file> [--verbose]
+EOT
+exit(1);
+}
+
+
+
+#
+# Read sms config file
+my $CONFIG;
+die "Can't read sms config file: $ARG_CONFIG!\n" 
+	unless ($CONFIG = read_config( $ARG_CONFIG ));
+
+
+
+#
+# Get parameters
+my $config = get_config($CONFIG, 'default');
+my $CFG_CONFIG = $config->{"transportconfig"};
+my $CFG_LOG = $config->{"log"};
+my $CFG_GROUPGFXDIR = $config->{"groupgraphicdir"};
+my $CFG_GROUPGFXPREFIX = $config->{"groupgraphicprefix"};
+my $CFG_RTTTLDIR = $config->{"rtttldir"};
+my $CFG_RTTTLPREFIX = $config->{"rtttlprefix"};
+my $CFG_ACL = $config->{"access"};
+my @CFG_ACL = split /,/, $CFG_ACL;
+
+verb(<<EOT
+SMART MESSAGING SERVER
+
+coming up with settings:
+ transportconfig              $CFG_CONFIG
+ log                          $CFG_LOG
+ groupgraphicdir              $CFG_GROUPGFXDIR
+ groupgraphicprefix           $CFG_GROUPGFXPREFIX
+ rtttldir                     $CFG_RTTTLDIR
+ rtttlprefix                  $CFG_RTTTLPREFIX
+ acl                          $CFG_ACL
+
+EOT
+);
+
+
+
+#
+# Initialize
+my $nbs = GSM::SMS::NBS->new( $CFG_CONFIG );
+
+my $msisdn;
+my $message;
+my $timestamp;
+my $transportname;
+my $port;
+
+my $logger = GSM::SMS::Log->new( $CFG_LOG );
+
+
+
+#
+# Start server ...
+while (1) {
+	verb( "waiting for message ..." );
+	# blocking receive
+	$nbs->receive(	\$msisdn, 
+			\$message, 
+			\$timestamp, 
+			\$transportname, 
+			\$port, 
+			1 );	
+	
+	verb(<<EOT
+
+received a message:
+msisdn:        $msisdn
+timestamp:     $timestamp
+transport:     $transportname
+port:          $port
+--------------------------------------------------------------------------
+$message
+--------------------------------------------------------------------------
+EOT
+);
+	# only text messages
+	unless ( $port ) {
+		# acl check
+		if ( grep { $msisdn =~ /$_/ } @CFG_ACL ) {
+			verb( "acl pass\n" );	
+			$message =~ /(\d{2})(\d{4})/;
+			my $prefix = $1;
+			my $resource = $2;
+	
+			# handle ringing tones	
+			if ( $prefix eq $CFG_RTTTLPREFIX ) {
+				verb( "rtttl\n" );
+				my $file = $CFG_RTTTLDIR . '/' . $resource . '.rtttl';
+				verb( "file $file " );
+				if ( -e $file ) {
+					verb( "is a valid resource!\n" );	
+					local (*F);
+					open F, $file;
+					my $rtttl_string = join "", <F>;
+					
+					close F;
+					$nbs->sendRTTTL( $msisdn, $rtttl_string );
+					$logger->logentry( sprintf("\"$message\"\t\"$msisdn\"") ); 
+				}
+			} 
+
+			# handle group graphics
+ 			if ( $prefix eq $CFG_GROUPGFXPREFIX ) {
+				verb( "groupgfx\n" );
+				my $file = $CFG_GROUPGFXDIR . '/' . $resource . '.gif';
+				verb( "file $file " );
+				if ( -e $file ) {
+					verb( "is a valid resource!\n" ); 
+					$nbs->sendGroupGraphic_file( $msisdn, $file );
+					$logger->logentry( sprintf("\"$message\"\t\"$msisdn\"") ); 
+				}
+			}
+		}
+	}
+	verb( "\n" );
+}
+exit(0);
+
+#
+# Verbose function
+sub verb {
+	print shift if $ARG_VERBOSE;
+}
