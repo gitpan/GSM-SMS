@@ -37,7 +37,7 @@ sub receive {
 		$self->_prt( "CHECK\n" );
 
 		# look for new datagrams on the stack
-		foreach my $transporter ( @{$t->get_transports()} ) {
+		foreach my $transporter ( $t->get_transports() ) {
 			$self->_prt( "x" );
 			$self->_prt( "T: " . $transporter->get_name() . "\n" );
 			my $pdu;

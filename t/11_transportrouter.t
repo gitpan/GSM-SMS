@@ -1,11 +1,6 @@
 use strict;
 use Test::More tests => 6;
 
-=for debugger
-use Log::Agent;
-logconfig( -level => 99 );
-=cut
-
 # test the TransportRouter abstract base class
 
 BEGIN {	use_ok( 'GSM::SMS::TransportRouter::TransportRouter' ) }

@@ -4,6 +4,7 @@ use vars qw( $VERSION );
 
 use Carp;
 use Log::Agent;
+use File::Spec;
 
 =head1 NAME
 
@@ -62,7 +63,8 @@ sub add_to_spool {
 
 	logdbg "debug", "Adding [$msisdn;$pdu] to spool as $filename";
 
-	open F, ">".$dir."/".$filename;
+	my $file = File::Spec->catfile( $dir, $filename );
+	open F, ">$file";
 	print F $pdu;
 	close F;
 
@@ -83,7 +85,7 @@ sub remove_from_spool {
 	logdbg "debug", "Removing $file from spool";
 
 	logwarn "Could not delete spoolfile ($file)." unless 
-		unlink( $dir."/".$file );
+		unlink( File::Spec->catfile($dir, $file) );
 }
 
 =item B<read_from_spool> - Read n files from the spool.

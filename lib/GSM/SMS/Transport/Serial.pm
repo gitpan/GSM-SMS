@@ -29,7 +29,7 @@ PDU messages. Therefore I only use the wavecom now.
 
 =cut
 
-use Device::SerialPort;
+use GSM::SMS::Support::SerialPort;
 use Log::Agent;
 
 {
@@ -68,7 +68,7 @@ my $__TO = 200;
     -csca => '+32475161616',
     -serial_port => '/dev/ttyS0',
     -baud_rate => '9600',
-    -memory_limit => '10'
+    -memorylimit => '10'
   }
 
 =cut
@@ -81,14 +81,29 @@ sub new {
 
 	my $self = $class->SUPER::new(%arg);
 
-	$self->{_pin_code} = $arg{"-pin-code"} || logcroak("missing pincode");
-	$self->{_csca}	= $arg{"-csca"} || logcroak("missing csca");
-	$self->{_serial_port} = $arg{"-serial-port"} || logcroak("missing serial-port");
-	$self->{_baud_rate}	= $arg{"-baud-rate"} || logcroak("missing baud-rate");
-	$self->{_memorylimit} = $arg{"-memorylimit"} || logcroak("missing memorylimit");
+	$self->{_pin_code} = $arg{-pin_code} || logcroak("missing -pin_code");
+	$self->{_csca}	= $arg{-csca} || logcroak("missing csca");
+	$self->{_serial_port} = $arg{-serial_port} || logcroak("missing -serial_port");
+	$self->{_baud_rate}	= $arg{-baud_rate} || logcroak("missing -baud-rate");
+	$self->{_memorylimit} = $arg{-memorylimit} || logcroak("missing -memorylimit");
 
 	bless($self, $class);
 	return $self->init();
+} 
+
+=item B<DESTROY> - Destructor
+
+The DESTRUCTOR is necessary for compatibility with Win32. It seems that the serial port needs to be closed explicitly before being able to reuse it in the same
+process.
+
+=cut
+
+sub DESTROY {
+	my $self = shift;
+
+	logdbg 'debug', 'Destructor for serial transport called';
+
+	$self->close;
 } 
 
 =item B<send> - Send a PDU encoded message
@@ -183,7 +198,7 @@ sub init {
 
 	# Start up serial port
 
-	my $portobject = Device::SerialPort->new ($port);
+	my $portobject = GSM::SMS::Support::SerialPort->new ($port);
    	$portobject->baudrate($br);
    	$portobject->parity("none");
    	$portobject->databits(8);
@@ -225,6 +240,7 @@ sub close {
 
 	my $l = $self->{log};
 	my $portobject = $self->get_serialport_object();
+	$portobject->close;
 	undef $portobject;
 
 	logdbg "debug", "Serial:" . $self->get_name() . " closed";
@@ -249,8 +265,8 @@ sub ping {
 sub get_info {
 	my ($self) = @_;
 
-	my $revision = '$Revision: 1.27 $';
-	my $date = '$Date: 2002/07/10 20:38:01 $';
+	my $revision = '$Revision: 1.5 $';
+	my $date = '$Date: 2002/12/13 21:29:11 $';
 
 print <<EOT;
 Serial transport $VERSION
@@ -359,14 +375,12 @@ sub _at {
  
  
     } while ( ($found==0) && ($counter<$timeout) );
- 
-    select(undef,undef,undef, 0.1);
- 
-    $to_read=$max-$count;
-    ($readcount, $input) = $ob->read($to_read);
- 
-    $in.=$input;
-    
+
+
+	while ( my $input = $ob->input ) {
+		$in .= $input;
+	}
+
 	return $in;
 }                                                                                          
 
@@ -460,22 +474,13 @@ sub _register {
 }
 1;
 
-=head1 NAME
-
-GSM::SMS::Transport::Serial
-
-=head1 DESCRIPTION
-
-This class implements a serial transport. It uses Device::SerialPort to communicate to the modem. At the moment the modem that I recommend is the WAVECOM modem. This module is in fact the root of the complete package, as the project started as a simple perl script that talked to a Nokia6110 connected via a software modem ( as that model did not implement standard AT ) on a WINNT machine, using Win32::SerialPort and Activestate perl. Also tested with the M20 modem module from SIEMENS. 
-
-I first used the Nokia6110, then moved to the Falcom A1 GSM modem, then moved to the SIEMENS M20 and then moved to the WAVECOM series. Both M20 and WAVECOM worked best, but I could crash the firmware in the M20 by sending some fake PDU messages.
-
 =head1 ISSUES
 
-The Device::SerialPort puts a big load on your system (active polling).
+The Device::SerialPort (Win32::SerialPort) puts a big load on your system (active polling).
 
 The initialisation does not always work well and sometimes you have to
 initialize your modem manually using minicom or something like that.
+Win32 users can use I<terminal> to connect to the modem and run these tests.
 
 	>minicom -s
 	AT

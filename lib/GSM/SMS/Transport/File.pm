@@ -141,8 +141,8 @@ sub ping {
 sub get_info {
 	my ($self) = @_;
 
-	my $revision = '$Revision: 1.6 $';
-	my $date = '$Date: 2002/07/10 17:57:22 $';
+	my $revision = '$Revision: 1.1.1.1 $';
+	my $date = '$Date: 2002/10/15 20:53:38 $';
 
 print <<EOT;
 File transport $VERSION

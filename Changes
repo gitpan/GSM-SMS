@@ -1,5 +1,49 @@
 Revision history for Perl extension GSM::SMS.
 
+0.160 Tue Dec 24 00:36:06 PST 2002
+	- Win32 compatibility for GSM::SMS, Win32 defaults in configuration
+	- Autogenerating README
+	- Bug in GSM::SMS::Config::_config_wizard prevented creation of directories
+
+	Mon Dec  9 00:12:10 PST 2002
+	- Added a test for the acessors (t/22_transport_accessor)
+	- GSM::SMS::Transport::get_transports now returns an array instead of
+	  an array ref.
+
+	Sat Dec  7 18:37:52 PST 2002
+	- Added an accessor to GSM::SMS::NBS to access the GSM::SMS::Transport object
+	- Added a method to get a transport object by name to GSM::SMS::Transport
+	  (get_transport_by_name)
+
+	Sat Nov 23 19:58:51 PST 2002
+	- Makefile.PL appended Config/Default.pm, no just writes it out
+	- t/03_transport_serial.t now uses the correct parameters for serial
+	  object.
+	- Config.pm mistakingly used 'pin-code' instead of 'pin_code'. The same
+	  for baud_rate, serial_port
+
+	Fri Nov 22 21:03:22 PST 2002
+	- Added an extra parameter to NBS::SendSMSTextMessage for flash messages.
+	- Added 4 constant definitions to NBS:
+	    FLASH_YES, FLASH_NO, MULTIPART_YES, MULTIPART_NO
+
+	Thu Oct 17 21:56:20 PDT 2002
+	- GSM::SMS should be Win32 compatible now.
+	- bin directory contains the first 'app', GSsend_text
+
+	Sun Sep 29 21:36:57 PDT 2002
+	- Changed the complete layout of the directory
+	   <project>/lib
+	   <project>/bin
+	   <project>/t
+	   <project>/docs
+	   <project>/examples
+	- Term::ReadLine is no more for Makefile.PL, using ExtUtils::MakeMaker
+      prompt instead.
+	- perl -MGSM::SMS::Config -egenerate_config generates a config file
+	  form the default configuration.
+	- Minor doc update in NBS.pm
+
 0.151 Tue Jul 23 20:21:31 CEST 2002
 	- Passed all unit test
 

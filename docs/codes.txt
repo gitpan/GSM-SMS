@@ -1,4 +1,4 @@
-Country;Operator/Network;Country code;Network code 
+Country;Operator/Network;Country code;Network code;prefixes 
 Albania;Albanian Mobile Comms;276;01 
 Algeria;Albanian Mobile Comms;603;01 
 Andorra;S.T.A. MobilAnd;213;03 

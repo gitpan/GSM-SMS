@@ -104,8 +104,8 @@ sub new {
 sub get_info {
 	my ($self) = @_;
 
-	my $revision = '$Revision: 1.13 $';
-	my $date = '$Date: 2002/07/14 12:02:17 $';
+	my $revision = '$Revision: 1.1.1.1 $';
+	my $date = '$Date: 2002/10/15 20:53:38 $';
 
 print <<EOT;
 MCube transport $VERSION

@@ -129,7 +129,7 @@ sub receive {
 	my ($self) = @_;
 	my $pdu;
 
-	foreach my $transport ( @{$self->get_transports()} ) {
+	foreach my $transport ( $self->get_transports() ) {
 		if ( $pdu = $transport->receive() ) {
 			logdbg "debug", "received [$pdu] on " . ref($transport)
 			                . " (" . $transport->get_name() . ")";
@@ -148,11 +148,9 @@ sub receive {
 	
 =cut
 
-# Get an array containing the transports
-##########################################################################
 sub get_transports {
 	my $self = shift;
-	return $self->{"__TRANSPORTS__"};
+	return @{$self->{"__TRANSPORTS__"}};
 }
 
 =item B<add_transport> - Push a transport on the transport stack
@@ -165,21 +163,42 @@ sub add_transport {
 	push( @{$self->{"__TRANSPORTS__"}}, $transport );
 }
 
+=item B<get_transport_by_name> - Return a specific transport by name
+
+  my $serial_transport = $transport->get_transport_by_name('serial01');
+  $serial_transport->at("ATDT 555");
+
+This method allows to get a reference to a specific transport object. It
+can be usefull if you want to do other things with the transport. It is
+especially intented for use with the serial transport, so you can do
+other things with your GSM modem without the need to close the transports.
+
+=cut
+
+sub get_transport_by_name {
+	my ($self, $name) = @_;
+
+	my @t = $self->get_transports;
+	foreach my $i (@t) {
+		if ($i->get_name eq $name) {
+			return $i;
+		}
+	}
+	return undef;
+}
+
 =item B<close>
 
 Shut down transport layer, calls the transport specific close method.
 
 =cut
 
-# Close
-#	Clean up ...
-##########################################################################
 sub close {
 	my $self = shift;
 
 	logdbg "debug", "closing all transports";
 
-	foreach my $transport ( @{$self->get_transports} ) {
+	foreach my $transport ( $self->get_transports ) {
 		logdbg "debug", "closing transport " . ref($transport) ." (" 
 							 . $transport->get_name() . ")";
 		
@@ -206,7 +225,7 @@ sub _route {
 
 	my $router = $self->{_router};
 
-	return $router->route( $msisdn, @{$self->get_transports()} );
+	return $router->route( $msisdn, $self->get_transports() );
 }
 
 # Init

@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 28;
+use Test::More tests => 29;
 
 BEGIN {
 	use_ok( 'GSM::SMS::NBS::Frame' );
@@ -30,4 +30,5 @@ BEGIN {
 	use_ok( 'GSM::SMS::TransportRouterFactory' );
 	use_ok( 'GSM::SMS::TransportRouter::TransportRouter' );
 	use_ok( 'GSM::SMS::TransportRouter::Simple' );
+	use_ok( 'GSM::SMS::Support::SerialPort' );
 }

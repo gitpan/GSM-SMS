@@ -98,8 +98,8 @@ sub new {
 sub get_info {
 	my ($self) = @_;
 
-	my $revision = '$Revision: 1.22 $';
-	my $date = '$Date: 2002/07/09 22:19:52 $';
+	my $revision = '$Revision: 1.1.1.1 $';
+	my $date = '$Date: 2002/10/15 20:53:38 $';
 
 print <<EOT;
 NovelSoft transport $VERSION
