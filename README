@@ -29,20 +29,19 @@ formats:
 	* Operator logos
 	* VCard
 	* OTA Configuration for WAP phones
+	* PictureMessage
 
 NEW IN THIS RELEASE
 	Look in the 'Changes' file for a complete review and credits.
 
-	* GSM::SMS::NBS::sendOperatorLogo_from{file,b64} now works.
-	* GSM::SMS::Support::RTTTL2MIDI converts rtttl strings to midi.
-	* Serial transport wait correctly for the modem to come up when
-	  reading SIM card information (phonebook, ...).
-	* GSM::SMS::NBS returns success and failure correctly	  
-	* XmlRpc Transport for remote node functionality.
-	  ( Look at the iSMS package for example, http://www.tektonica.com )
-	* Faster SMS delete on Serial transport
-	* Supports more GSM modems ( Siemens ) by use of extra
-	  config parameter ( memorylimit ).
+	This release concentrates around a redesign of the package,
+	instead on more features.
+
+	* Complete redesign of some of the lower level parts:
+		- Transport, TransportRouter
+	* Default configuration (no more config files)
+	* Wizard like configuration when running 'perl Makefile.PL'
+	* More tests in the ./t subdirectory
 
 PREREQUISITES
 
@@ -68,6 +67,12 @@ I *should* be a simple:
 CONFIGURATION
 
 This is important, because the transports need to be configured.
+
+When running 'perl Makefile.PL' you'll get the possibility to configure
+most parts of the system. This way you don't need a config file per
+application. You still can override default package settings via a 
+config file, though.
+
 The best you can do is look in the examples for the file transport.cfg.
 This file contains the necessary settings for the transports and are
 (clearly) documented. As time permits I will be expanding the documentation.

@@ -4,16 +4,17 @@ package GSM::SMS::OTA::Bitmap;
 require Exporter;
 @ISA = qw(Exporter);
 
-@EXPORT = qw( BITMAP_WIDTH BITMAP_HEIGHT OTABitmap_makestream OTABitmap_fromfile OTABitmap_fromb64 );
+@EXPORT = qw( BITMAP_WIDTH BITMAP_HEIGHT BITMAP_HEIGHT_DOUBLE OTABitmap_makestream OTABitmap_fromfile OTABitmap_fromb64 );
 
 $VERSION = '0.1';
 
-use constant BITMAP_WIDTH  => 72;
-use constant BITMAP_HEIGHT => 14;
+use constant BITMAP_WIDTH  			=> 72;
+
+use constant BITMAP_HEIGHT 			=> 14;
+use constant BITMAP_HEIGHT_DOUBLE 	=> 28;
 
 use MIME::Base64;
 use Image::Magick;
-
 
 sub OTABitmap_makestream {
 	my ($width, $height, $depth, $ref_bytearray) = @_;
@@ -38,9 +39,16 @@ sub OTABitmap_fromfile {
 
 	$image->Read( $filename );
 
-	# check image size
-	return -1 unless ( $image->Get('columns') == BITMAP_WIDTH && $image->Get('height') == BITMAP_HEIGHT );
-
+	# check image size(s)
+	# 1. width
+	return -1 unless ( $image->Get('columns') == BITMAP_WIDTH );
+	
+	# 2. height
+	return -1 unless ( $image->Get('height') == BITMAP_HEIGHT 
+					   ||
+					   $image->Get('height') == BITMAP_HEIGHT_DOUBLE
+					);
+	
 	# convert to monochrome
 	$image->Set(magick => 'mono');
 	my $monochrome = $image->ImageToBlob( );
@@ -51,8 +59,13 @@ sub OTABitmap_fromfile {
 		my $byte =  reverse(unpack("B8", $b));
 		push(@ba, pack("B8", $byte));
 	}
+
+	# get dimensions
+	my $width = $image->Get('columns');
+	my $height = $image->Get('height');
+	
 	undef $image;	
-	return (\@ba);
+	return (\@ba, $width, $height);
 }
 
 sub OTABitmap_fromb64 {
@@ -65,8 +78,15 @@ sub OTABitmap_fromb64 {
 
 	$image->BlobToImage( $blob );
 
-	# check image size
-	return -1 unless ( $image->Get('columns') == BITMAP_WIDTH && $image->Get('height') == BITMAP_HEIGHT );
+	# check image size(s)
+	# 1. width
+	return -1 unless ( $image->Get('columns') == BITMAP_WIDTH );
+	
+	# 2. height
+	return -1 unless ( $image->Get('height') == BITMAP_HEIGHT 
+					   ||
+					   $image->Get('height') == BITMAP_HEIGHT_DOUBLE
+					);
 
 	# convert to monochrome
 	$image->Set(magick => 'mono');
@@ -78,8 +98,11 @@ sub OTABitmap_fromb64 {
 		my $byte =  reverse(unpack("B8", $b));
 		push(@ba, pack("B8", $byte));
 	}
+	my $width = $image->Get('columns');
+	my $height = $image->Get('height');
+	
 	undef $image;	
-	return (\@ba);
+	return (\@ba, $width, $height);
 }
 1;
 
@@ -89,7 +112,7 @@ GSM::SMS::OTA::Bitmap
 
 =head1 DESCRIPTION
 
-Used to create a ota bitmap to use in CLI and OPERATOR logo's. We use the perlinterface to ImageMagick instead of the 'convert' command from the same package.
+Used to create a ota bitmap to use in CLI and OPERATOR logo's, also the double height format as in a PictureMessage is supported. We use the perlinterface to ImageMagick instead of the 'convert' command from the same package.
 
 =head1 METHODS
 
@@ -109,7 +132,7 @@ Create a bitmap array from a file.
 
 	$stream = OTABitmap_makestream( $width, $height, $depth, $ref_bitmaparray );
 
-Create a OTA Bitmap. Width is 72 and height is 14 pixels, you can find those back in the constants BITMAP_WIDTH and BITMAP_HEIGHT.	
+Create an OTA Bitmap. Width is 72 and height is 14 or 28 pixels, you can find those back in the constants BITMAP_WIDTH, BITMAP_HEIGHT and BITMAP_HEIGHT_DOUBLE.	
 
 =head1 AUTHOR
 

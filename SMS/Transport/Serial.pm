@@ -1,57 +1,106 @@
 package GSM::SMS::Transport::Serial;
+use strict;
+use vars qw( $VERSION $AUTLOAD );
 
-#
-# SMS transport layer for serial GSM modems
-#
+use base qw( GSM::SMS::Transport::Transport );
 
-use GSM::SMS::Transport::Transport;
-@ISA = qw(GSM::SMS::Transport::Transport);
+$VERSION = '0.2';
 
-$VERSION = '0.1';
+=head1 NAME
+
+GSM::SMS::Transport::Serial - Send and receive SMS messages via a GSM modem
+
+=head1 DESCRIPTION
+
+This class implements a serial transport. It uses Device::SerialPort to 
+communicate to the modem. At the moment the modem that I recommend is the 
+WAVECOM modem. The serial transport has also been  tested for the M20 modem 
+module from SIEMENS. 
+
+This module is in fact the root of the complete GSM::SMS package, as the 
+project started as a simple perl script that talked to a Nokia6110 connected 
+via a software modem ( as that model did not implement standard AT ) on a 
+WINNT machine, using Win32::SerialPort and Activestate perl. 
+
+I first used the Nokia6110, then moved to the Falcom A1 GSM modem, then moved 
+to the SIEMENS M20 and then moved to the WAVECOM series. Both M20 and WAVECOM 
+work best, but I could crash the firmware in the M20 by sending some fake 
+PDU messages. Therefore I only use the wavecom now.
+
+=cut
 
 use Device::SerialPort;
-use GSM::SMS::Log;
-use GSM::SMS::Spool;
+use Log::Agent;
 
-# All the parameters I need to run ...
-my @config_vars = qw( 
-	name
-	match	
-	serial-port
-	baud-rate
-	heartbeat
-	pin-code
-	csca
-	spoolout
-	spoolin
-					);
+{
+	my %_attrs = (
+		_name				=> 'read',
+		_originator			=> 'read/write',
+		_match				=> 'read/write',
+		_pin_code			=> 'read',
+		_csca				=> 'read',
+		_serial_port		=> 'read',
+		_serialport_object	=> 'read/write',
+		_baud_rate			=> 'read',
+		_memorylimit		=> 'read'
+	);	
+
+	sub _accessible
+	{
+		my ($self, $attr, $mode) = @_;
+		$_attrs{$attr} =~ /$mode/
+	}
+}
 
 my $__TO = 200;
 
-# constructor
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
+=head1 METHODS
 
-	my $self = {};
-	$self->{cfg} = shift;
+=over 4
+
+=item B<new> - Constructor
+
+  my $s = GSM::SMS::Transport::Serial->new(
+    -name => 'serial',
+    -originator => 'GSM::SMS',
+    -match => '.*',
+    -pin_code => '0000',
+    -csca => '+32475161616',
+    -serial_port => '/dev/ttyS0',
+    -baud_rate => '9600',
+    -memory_limit => '10'
+  }
+
+=cut
+
+sub new {
+	my ($proto, %arg) = @_;
+	my $class = ref($proto) || $proto;
 	
-	$self->{'__LOGGER__'} = GSM::SMS::Log->new( $self->{cfg}->{"log"} );
-	
+	logdbg "debug", "$class constructor called";
+
+	my $self = $class->SUPER::new(%arg);
+
+	$self->{_pin_code} = $arg{"-pin-code"} || logcroak("missing pincode");
+	$self->{_csca}	= $arg{"-csca"} || logcroak("missing csca");
+	$self->{_serial_port} = $arg{"-serial-port"} || logcroak("missing serial-port");
+	$self->{_baud_rate}	= $arg{"-baud-rate"} || logcroak("missing baud-rate");
+	$self->{_memorylimit} = $arg{"-memorylimit"} || logcroak("missing memorylimit");
+
 	bless($self, $class);
-	my $success = $self->init( $self->{cfg} );
-	return $self unless $sucess;
-	return undef;
+	return $self->init();
 } 
 
-# Send a PDU encoded message
+=item B<send> - Send a PDU encoded message
+
+=cut
+
 sub send {
 	my($self, $msisdn, $p) = @_;
-	my $logger = $self->{'__LOGGER__'};
 	chomp($p);
 
-	# print "MSISDN : $msisdn\n";
-	# print "MSG: $p\n";
+	logdbg "debug", "Serial:" . $self->get_name() . " msisdn=$msisdn";
+	logdbg "debug", "Serial:" . $self->get_name() . " pdu=$p";
 
 	# calculate length of message
 	my $len =  length($p)/2 - 1;
@@ -62,28 +111,31 @@ sub send {
     $self->_at("AT+CMGS=$len\r", $__TO, ">");
     my $res = $self->_at("$p\cz", $__TO);
 
-	# print "## $res\n"; 
-	
 	if ($res=~/OK/) {
-		$logger->logentry("send [$p]") if $logger;
+		logdbg "debug", "Serial:" . $self->get_name() . " send [$p]";
 		return 0;
 	} else {
-		$logger->logentry("error sending [$p]") if $logger;
+		logdbg "debug", "Serial:" . $self->get_name() . " error sending [$p]";
+		logerr "Serial:" . $self->get_name() . " error sending [$p]";
 		return -1;
 	}
 }
 
+=item B<receive> -  Receive a PDU encoded message
 
-# Receive a PDU encoded message
-# Will return a PDU string in $pduref from the modem IF we have a message pending 
-# return
-#	0 if PDU received
-#	-1 if no message pending
+  Will return a PDU string in $pduref from the modem IF we have 
+  a message pending return:
+     0 if PDU received
+    -1 if no message pending
+
+=cut
+	
 sub receive {
 	my ($self, $pduref) = @_;
 
 	my $ar = $self->{MSGARRAY};
-	my $msg = shift (@$ar); 	# shift because we want to delete lower index first (problem with modem)
+	# shift because we want to delete lower index first (problem with modem)
+	my $msg = shift (@$ar); 	
 	if (!$msg) {
 		
 		# Read in pending messages
@@ -103,120 +155,120 @@ sub receive {
 	return -1;
 }
 
+=item B<init> - Initialise this transport layer
 
-# Initialise this transport layer$
-#  No init file -> default initfile for transport
+  No init file -> default initfile for transport
+ 
+=cut
+
 sub init {
-	my ($self, $config) = @_;
+	my ($self) = @_;
 
-	if ($self->_init($config)) {
-		return -1;
+	# Start of log ...
+	logdbg "debug","Starting Serial Transport for " . $self->get_name();
+	
+	# Get configuration from config file
+
+	my $port 	= $self->get_serial_port();
+	my $br   	= $self->get_baud_rate();
+	my $pc   	= $self->get_pin_code();
+	my $csca 	= $self->get_csca();
+	my $modem 	= $self->get_name();
+	
+	logdbg "debug", "serial-port: $port";
+	logdbg "debug", "baud-rate: $br";
+	logdbg "debug", "pin-code: $pc";
+	logdbg "debug", "csca: $csca";
+	logdbg "debug", "name: $modem";
+
+	# Start up serial port
+
+	my $portobject = Device::SerialPort->new ($port);
+   	$portobject->baudrate($br);
+   	$portobject->parity("none");
+   	$portobject->databits(8);
+   	$portobject->stopbits(1);
+	$self->set_serialport_object( $portobject );
+
+	unless ( $portobject ) {
+		logdbg "debug", "Could not open serial port";
+		logerr "Could not open serial port";
+		return undef;
 	}
 
-	$self->{MSGARRAY} = [];
+	# Try to communicate to the port
+	$self->_at("ATZ\r", $__TO);
+	$self->_at("ATE0\r", $__TO);
+	my $res = $self->_at("AT\r", $__TO);
 	
-	return 0;
+	logdbg "debug", "Serial: AT yielded [$res]";
+	unless ($res =~/OK/is) {
+		logerr "Could not communicate to $port, expected 'OK' but got '$res'";
+		return undef;
+	}
+
+	# Check the modem status (PIN, CSCA and network connection)
+	return undef unless ( $self->_register );
+
+	$self->{MSGARRAY} = [];
+
+	logdbg "debug", "Modem is alive! (SQ=" . $self->_getSQ() . "dBm)";
+	return $self;
 }
 
+=item B<close> - Close the init file
 
+=cut
 
-# Close the init file
 sub close {
 	my ($self) =@_;
 
-	my $logger = $self->{'__LOGGER__'};
-	
 	my $l = $self->{log};
-	undef $self->{port};
-	$logger->logentry("Serialtransport stopped") if $logger;
+	my $portobject = $self->get_serialport_object();
+	undef $portobject;
+
+	logdbg "debug", "Serial:" . $self->get_name() . " closed";
 }
 
+=item B<ping> - A ping command
 
-# A ping command .. just return an informative string on success
+  .. just return an informative string on success
+
+=cut
+
 sub ping {
 	my ($self) = @_;
 
 	return $self->_getSQ();
 }
 
-# give out the needed config paramters
-sub get_config_parameters {
+=item B<get_info> - Give some info about this transport
+
+=cut
+
+sub get_info {
 	my ($self) = @_;
 
-	return @config_vars;
+	my $revision = '$Revision: 1.27 $';
+	my $date = '$Date: 2002/07/10 20:38:01 $';
+
+print <<EOT;
+Serial transport $VERSION
+
+Revision: $revision
+
+Date: $date
+
+EOT
 }
 
-# Do we have a valid route for this msisdn
-sub has_valid_route {
-	my ($self, $msisdn) = @_;
+=back
 
-	# print "in route\n";
-	# print Dumper $self->{cfg};
-	foreach my $route ( split /,/, $self->{cfg}->{"match"} ) {
-		# print $route;
-		return -1 if $msisdn =~ /$route/;
-	}
-	return 0;
-}
-
-sub get_name {
-	my ($self) = @_;
-
-	return $self->{cfg}->{name};
-}
+=cut
 
 ###############################################################################
 # Transport layer specific functions
 #
-sub _init {
-	my ($self, $cfg) = @_;
-
-	my $logger = $self->{'__LOGGER__'};
-	
-	# print Dumper $cfg;
-
-
-	# Start of log ...
-	$logger->logentry('Starting Serial Transport for '.$cfg->{"name"}) if $logger;
-	
-	# Get configuration from config file
-
-	
-
-	$self->{cfg} = $cfg;
-
-	my $port = $cfg->{"serial-port"}	||	return -1;
-	my $br   = $cfg->{"baud-rate"}		|| 	return -1;
-	my $pc   = $cfg->{"pin-code"}		|| 	return -1;
-	my $csca = $cfg->{"csca"}		|| 	return -1;
-	my $modem = $cfg->{"name"};
-	
-	# Start up serial port
-	$self->{port} = Device::SerialPort->new ($port);
-    	$self->{port}->baudrate($br);
-    	$self->{port}->parity("none");
-    	$self->{port}->databits(8);
-    	$self->{port}->stopbits(1);
-
-	# Try to communicate to the port
-	$self->_at("ATZ\r", $__TO);
-	$self->_at("ATE0\r", $__TO);
-	my $res = $self->_at("AT\r", $__TO);
-
-	unless ($res =~/OK/is) {
-		$logger->logentry('Could not communicate to '.$port.'.') if $logger;
-		return -1;
-	}
-
-	# Check the modem status (PIN, CSCA and network connection)
-	return -1 unless ( $self->_register );
-
-	$logger->logentry("Modem is alive! (SQ=".$self->_getSQ()."dBm)") if $logger;
-	return 0;
-}
-
-
-
 sub _getSMS {
 	my ($self) = @_;
 	my $result = [];
@@ -226,7 +278,7 @@ sub _getSMS {
 	$self->_at("AT+CMGF=0\r", $__TO);
 
 	# loop from 1 to cfg->memorylimit to get messages
-	my $limit = $self->{cfg}->{"memorylimit"} || 10;
+	my $limit = $self->get_memorylimit() || 10;
 	for (my $i=1; $i<=$limit; $i++) {
 		my $res = $self->_at( "AT+CMGR=$i\r", $__TO );
 
@@ -258,13 +310,8 @@ sub _getSMS {
 sub _delete {
 	my ($self, $id) = @_;
 	
-	my $l=$self->{log};
-
 	$self->_at("AT+CMGF=1\r", $__TO);
 	my $res = $self->_at("AT+CMGD=".$id."\r", $__TO);
-	# my $res="OK";	
-
-	# print "DELETE $res\n";
 
 	if ($res=~/OK/) {
 	} else {
@@ -276,7 +323,7 @@ sub _delete {
 sub _at {
     my ($self, $at, $timeout, $expect) = @_;
  
-	my $ob = $self->{port};
+	my $ob = $self->get_serialport_object();
 
     $ob->purge_all;
     $ob->write("$at");
@@ -291,8 +338,6 @@ sub _at {
     my $input;
     my $counter=0;
 
-	# print "$at\n";
- 
     do {
         select(undef,undef,undef, 0.1);
         $to_read = $max - $count;
@@ -305,7 +350,7 @@ sub _at {
             $found=1;
         }
  
-        if ( $expect ne "" ) {
+        if ( $expect ) {
             if ( index($in, $expect) > -1 ) {
                 $found=1;
             }
@@ -321,10 +366,8 @@ sub _at {
     ($readcount, $input) = $ob->read($to_read);
  
     $in.=$input;
-
-	# print "# $in #\n";
-
-    return $in;
+    
+	return $in;
 }                                                                                          
 
 sub _getSQ {
@@ -349,35 +392,24 @@ sub _register {
 	my ($self) = @_;
 	my $res;
 
-	my $logger = $self->{'__LOGGER__'};
+	my $pc   = $self->get_pin_code();
+	my $csca = $self->get_csca();	
 	
-	my $cfg = $self->{cfg};
+    logdbg "debug", "Checking if modem ready ..";
 
-	my $pc   = $cfg->{"pin-code"};
-	my $csca = $cfg->{"csca"};	
-	
-    $logger->logentry( "Checking if modem ready .." ) if $logger;    
-
-	# I should speed this 'registering' up ...
-	# ... actually I should have a command that tells me
-	# ready to send|receive ...
-	#
-	# $res = $self->_at("AT+MAGIC?\r", $__TO);
-	# return -1 if ( $res=~/OK/ );
-	
 	# 1. Do we need to give in the PIN ?
 	$res = $self->_at("AT+CPIN?\r", $__TO, "+CPIN:");
 
 	if ( $res=~/\+CPIN: SIM PIN/i ) {
 		# Put PIN
-		$logger->logentry("Modem needs PIN ...") if $logger;	
+		logdbg "debug", "Modem needs PIN ...";
 		$self->_at("AT+CPIN=\"$pc\"\r", $__TO);
 		 
 		# Check PIN
 		$res = $self->_at("AT+CPIN?\r", $__TO , "+CPIN:");
 		if( $res!~/\+CPIN: READY/i ) {
-			# somethings wrong here!
-			$logger->logentry("Modem did not accept PIN!") if $logger;
+			logdbg "debug", "Modem did not accept PIN!";
+			logerr "Modem did not accept PIN!";
 			return 0;
 		}
 	}
@@ -398,13 +430,14 @@ sub _register {
 	until ( $registered || ((time - $stime) > 10 ) );
 
 	if( $registered==0 ) {
-		$logger->logentry("Modem could not register on network!") if $logger;
+		logdbg "debug", "Modem could not register on network!";
+		logerr "Modem could not register on network!";
 		return 0;
 	}
 
 	# 4. Wait until SIM chip is ready (give it 3 mins) - by checking +cmgf
     my $simReady = 0;
-    my $stime = time;
+    $stime = time;
     do {
         $res = $self->_at("AT+CMGF=0\r", $__TO , "+CMGF");
         if ( $res=~/OK/i ) {
@@ -416,8 +449,9 @@ sub _register {
     until ( $simReady || ((time - $stime) > 180 ) );
 
     if( $simReady==0 ) {
-        $logger->logentry("SIM will not respond!") if $logger;
-        return 0;
+        logdbg "debug", "SIM will not respond!";
+        logerr "SIM will not respond!";
+		return 0;
     }
 
 	# All went fine!

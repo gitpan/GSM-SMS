@@ -2,10 +2,11 @@
 
 #
 # Load some modules
-use GSM::SMS::Log;
 use GSM::SMS::Config;
 use GSM::SMS::NBS;
 use Getopt::Long;
+use Log::Agent;
+require Log::Agent::Driver::File;
 
 #
 # No output buffering
@@ -16,34 +17,38 @@ $|++;
 #
 # Arguments
 my $ARG_CONFIG;
+my $ARG_TRANSPORTCONFIG;
 my $ARG_VERBOSE;
 GetOptions( 
-	"config:s" => \$ARG_CONFIG,
+	"config=s" => \$ARG_CONFIG,
+	"transportconfig:s" => \$ARG_TRANSPORTCONFIG,
 	"verbose" => \$ARG_VERBOSE	
  );
 
 unless ( $ARG_CONFIG ) {
 print <<EOT;
-Usage: $0 --config=<config file> [--verbose]
+Usage: $0 --config=<config file> [--transportconfig=<transport config file>] [--verbose]
 EOT
 exit(1);
 }
 
 
-
 #
-# Read sms config file
-my $CONFIG;
-die "Can't read sms config file: $ARG_CONFIG!\n" 
-	unless ($CONFIG = read_config( $ARG_CONFIG ));
-
-
-
-#
-# Get parameters
-my $config = get_config($CONFIG, 'default');
-my $CFG_CONFIG = $config->{"transportconfig"};
+# Read & process sms config file
+my $config = {};
+open CFG, $ARG_CONFIG or die "Can't read sms config file: $ARG_CONFIG!\n";
+while (<CFG>) {
+	chomp;
+	s/#.*//;
+	s/^\s+//;
+	s/\s+$//;
+	next unless length;
+	my ($var, $value) = split(/\s*=\s*/, $_, 2);
+	$config->{$var} = $value;
+}
+close CFG;
 my $CFG_LOG = $config->{"log"};
+my $CFG_LOGLEVEL = $config->{"loglevel"};
 my $CFG_GROUPGFXDIR = $config->{"groupgraphicdir"};
 my $CFG_GROUPGFXPREFIX = $config->{"groupgraphicprefix"};
 my $CFG_RTTTLDIR = $config->{"rtttldir"};
@@ -55,8 +60,9 @@ verb(<<EOT
 SMART MESSAGING SERVER
 
 coming up with settings:
- transportconfig              $CFG_CONFIG
+ transportconfig              $ARG_TRANSPORTCONFIG
  log                          $CFG_LOG
+ loglevel                     $CFG_LOGLEVEL
  groupgraphicdir              $CFG_GROUPGFXDIR
  groupgraphicprefix           $CFG_GROUPGFXPREFIX
  rtttldir                     $CFG_RTTTLDIR
@@ -70,17 +76,32 @@ EOT
 
 #
 # Initialize
-my $nbs = GSM::SMS::NBS->new( $CFG_CONFIG );
+if ( $CFG_LOG ne "" ) {
+	logconfig( 	-level	=> $CFG_LOGLEVEL,
+				-driver =>
+		Log::Agent::Driver::File->make(
+			-prefix			=> $0,
+			-showpid		=> 1,
+			-channels		=> {
+				'error'		=> "$CFG_LOG/$0.err",
+				'output'	=> "$CFG_LOG/$0.out",
+				'debug'		=> "$CFG_LOG/$0.dbg"
+			},
+		)
+	);
+}
+
+if ( $CFG_LOG eq "" && $CFG_LOGLEVEL ne "" ) {
+	logconfig( -level => $CFG_LOGLEVEL );
+}
+
+my $nbs = GSM::SMS::NBS->new( $ARG_TRANSPORTCONFIG );
 
 my $msisdn;
 my $message;
 my $timestamp;
 my $transportname;
 my $port;
-
-my $logger = GSM::SMS::Log->new( $CFG_LOG );
-
-
 
 #
 # Start server ...
@@ -128,7 +149,7 @@ EOT
 					
 					close F;
 					$nbs->sendRTTTL( $msisdn, $rtttl_string );
-					$logger->logentry( sprintf("\"$message\"\t\"$msisdn\"") ); 
+					logsay( sprintf("\"$message\"\t\"$msisdn\"") ); 
 				}
 			} 
 
@@ -140,7 +161,7 @@ EOT
 				if ( -e $file ) {
 					verb( "is a valid resource!\n" ); 
 					$nbs->sendGroupGraphic_file( $msisdn, $file );
-					$logger->logentry( sprintf("\"$message\"\t\"$msisdn\"") ); 
+					logsay( sprintf("\"$message\"\t\"$msisdn\"") ); 
 				}
 			}
 		}

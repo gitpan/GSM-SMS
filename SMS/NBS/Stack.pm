@@ -194,7 +194,7 @@ sub _prt {
 
 =head1 NAME
 
-GSM::SMS::NBS::Stack
+GSM::SMS::NBS::Stack - Narrow Bandwidth Socket protocol stack.
 
 =head1 DESCRIPTION
 

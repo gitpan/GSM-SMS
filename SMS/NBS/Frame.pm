@@ -83,7 +83,7 @@ sub asString {
 
 =head1 NAME
 
-GSM::SMS::NBS::Frame
+GSM::SMS::NBS::Frame - Encapsulates frames for NBS messages.
 
 =head1 DESCRIPTION
 

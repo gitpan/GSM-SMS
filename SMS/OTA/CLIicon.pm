@@ -17,7 +17,7 @@ use constant OTACLIicon_PORT => 5507;
 sub OTACLIicon_fromb64 {
 	my ($b64, $format) = @_;
 
-	my $arr = OTABitmap_fromb64( $b64, $format );
+	my ($arr, $w, $h) = OTABitmap_fromb64( $b64, $format );
 	return -1 if $arr == -1;
 
 	return OTACLIicon_makestream( 72, 14, 1, $arr ); 
@@ -26,7 +26,7 @@ sub OTACLIicon_fromb64 {
 sub OTACLIicon_fromfile {
 	my ($file) = @_;
 
-	my $arr = OTABitmap_fromfile( $file );
+	my ($arr, $w, $h) = OTABitmap_fromfile( $file );
 	return -1 if $arr == -1;
 
 	return OTACLIicon_makestream( 72, 14, 1, $arr );

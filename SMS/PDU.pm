@@ -1,4 +1,6 @@
 package GSM::SMS::PDU;
+use strict;
+use vars qw( $VERSION );
 # (c) 1999 tektonica
 # author: Johan Van den Brande 
 
@@ -444,6 +446,7 @@ sub SMSSubmit_decode {
 # Get an Adress (OA / DA )
 sub getServiceCenterAddress {
 	my($self, $ref_msg_arr) = @_;
+	my $adr;
 	
 	# First get address length
 	my $len 	= 	 hex($self->getoctet($ref_msg_arr));
@@ -452,7 +455,6 @@ sub getServiceCenterAddress {
 		my $typ 	= 	 $self->getoctet($ref_msg_arr);
 
 		# Third get  address itself ...
-		my $adr;	# accu for adress
 		for (my $pos=0;$pos<$len-1;$pos++) {
 			$adr.= $self->swapoctet($self->getoctet($ref_msg_arr));
 		}
@@ -470,13 +472,14 @@ sub getServiceCenterAddress {
 # Get an Adress (OA / DA )
 sub getOriginatingAddress {
 	my($self, $ref_msg_arr) = @_;
+	my $adr;
 	
 	# First get address length
 	my $len 	= 	 hex($self->getoctet($ref_msg_arr));
 	# Second get Type of address
 	my $typ 	= 	 $self->getoctet($ref_msg_arr);
 	# Third get  address itself ...
-	my $adr;	# accu for adress
+	
 	for (my $pos=0;$pos<$len;$pos+=2) {
 		$adr.= $self->swapoctet($self->getoctet($ref_msg_arr));
 	}
@@ -578,11 +581,12 @@ sub encodeServiceCenterAddress {
 
 sub getoctet {
 	my ($self, $ar, $len, $swap) = @_;
+
 	my $o = $ar->[0].$ar->[1];
 	$o=$self->swapoctet($o) if ($swap);
 	shift @$ar;
 	shift @$ar;
-	while ($len-1>0) {
+	while (defined($len) && ($len - 1 > 0)) {
 		my $oo = $ar->[0].$ar->[1];
 		$oo=$self->swapoctet($oo) if ($swap);
 		$o.= $oo;
@@ -603,11 +607,14 @@ sub decode_7bit {
 	my ($self, $ud, $len) = @_;
 	my ($msg,$bits);
 	my $cnt=0;
+	$ud = $ud || "";
+	$len = $len || 0;
+	$msg = "";
 	my $byte = unpack('b8', pack('H2', substr($ud, 0, 2)));
 	while (($cnt<length($ud)) && (length($msg)<$len)) {
 		$msg.= pack('b7', $byte);
 		$byte = substr($byte,7,length($byte)-7);
-		if (length($byte)<7) {
+		if ( (length( $byte ) < 7) ) {
 			$cnt+=2; 
 			$byte = $byte.unpack('b8', pack('H2', substr($ud, $cnt, 2)));
 		}
@@ -617,14 +624,15 @@ sub decode_7bit {
 
 sub encode_7bit {
 	my ($self, $msg) = @_;
-	my ($bits,$ud);
+	my ($bits, $ud, $octet);
+
 	foreach (split(//,$msg)) {
 		$bits .= unpack('b7', $_);
 	}
-	while (length $bits) {
+	while (defined($bits) && (length($bits)>0)) {
 		$octet = substr($bits,0,8);
 		$ud .= unpack("H2", pack("b8", substr($octet."0" x 7, 0, 8)));
-		$bits = substr($bits,8);
+		$bits = (length($bits)>8)?substr($bits,8):"";
 	}
 	return uc $ud;
 }
@@ -668,7 +676,7 @@ sub inversetranslate {
 
 =head1 NAME
 
-GSM::SMS::PDU
+GSM::SMS::PDU - Codec for Protocol Data Units.
 
 =head1 DESCRIPTION
 

@@ -99,7 +99,7 @@ sub get_frames {
 
 =head1 NAME
 
-GSM::SMS::NBS::Message
+GSM::SMS::NBS::Message - SAR functionality for NBS messages.
 
 =head1 DESCRIPTION
 

@@ -17,7 +17,7 @@ use constant OTAOperatorlogo_PORT => 5506;
 sub OTAOperatorlogo_fromb64 {
 	my ($countrycode, $operatorcode, $b64, $format) = @_;
 
-	my $arr = OTABitmap_fromb64( $b64, $format );
+	my ($arr, $w, $h) = OTABitmap_fromb64( $b64, $format );
 	return -1 if $arr == -1;
 
 	return OTAOperatorlogo_makestream( $countrycode, $operatorcode, 72, 14, 1, $arr ); 
@@ -26,7 +26,7 @@ sub OTAOperatorlogo_fromb64 {
 sub OTAOperatorlogo_fromfile {
 	my ($countrycode, $operatorcode, $file) = @_;
 
-	my $arr = OTABitmap_fromfile( $file );
+	my ($arr, $w, $h) = OTABitmap_fromfile( $file );
 	return -1 if $arr == -1;
 
 	return OTAOperatorlogo_makestream( $countrycode, $operatorcode, 72, 14, 1, $arr ); 

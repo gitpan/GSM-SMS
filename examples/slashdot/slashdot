@@ -19,17 +19,17 @@ my $ARG_VERBOSE;
 my $ARG_CACHEFILE;
 my $ARG_ACL;
 GetOptions(
-	"transport=s"	=> \$ARG_TRANSPORTCFG,	
+	"config:s"		=> \$ARG_TRANSPORTCFG,	
 	"verbose"		=> \$ARG_VERBOSE,
 	"cachefile=s"	=> \$ARG_CACHEFILE,
 	"acl=s"			=> \$ARG_ACL
 			);
 
-unless ( $ARG_CACHEFILE && $ARG_ACL && $ARG_TRANSPORTCFG ) {
+unless ( $ARG_CACHEFILE && $ARG_ACL ) {
 print <<EOT;
-Usage: $0 --transport=<file with transport config> --cachefile=<file to keep cache> --acl=<comma seperated msisdn regexs> [--verbose]
+Usage: $0 --cachefile=<file to keep cache> --acl=<comma seperated msisdn regexs> [--verbose] [--config=<file with transport config>] 
 
-    transport        File that contains the transport configuration.
+    config           File that contains the transport configuration.
     
     cachefile        File to keep latest headlines. Slashdot asks only to hit
                      the server 1 time in an hour, so we obey.
@@ -67,7 +67,7 @@ verb( join( " ", split( //, "SLASHDOT HEADLINES") ) . "\n\n" );
 
 my $nbs = GSM::SMS::NBS->new( $ARG_TRANSPORTCFG );
 
-die "Sorry ... could not active NBS stack ... check transport logfiles\n"
+die "Sorry ... could not activate NBS stack ($!) ... check transport logfiles\n"
 	unless $nbs;
 
 my $message;
@@ -137,7 +137,7 @@ EOT
 					verb( "=" x 75 . "\n" );
 					verb( $msg[$i] );
 					verb( "." x 75 . "\n\n");
-					if ($nbs->sendSMSTextMessage( $msisdn, $msg[$i] )) {
+					unless ($nbs->sendSMSTextMessage( $msisdn, $msg[$i] )) {
 						verb("!ERROR SENDING! *check logfile*\n");
 					}
 				}

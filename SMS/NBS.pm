@@ -2,7 +2,7 @@ package GSM::SMS::NBS;
 
 use vars qw($VERSION);
 
-$VERSION = '0.142';
+$VERSION = '0.150';
 
 use GSM::SMS::NBS::Message;
 use GSM::SMS::NBS::Stack;
@@ -11,22 +11,51 @@ use GSM::SMS::OTA::CLIicon;
 use GSM::SMS::OTA::Operatorlogo;
 use GSM::SMS::OTA::VCard;
 use GSM::SMS::OTA::Config;
+use GSM::SMS::OTA::PictureMessage;
 use GSM::SMS::Transport;
 use MIME::Base64;
-
+use Log::Agent;
 
 #
 # Constructor
 #
 sub new {
-	my $proto = shift;
+	my ($proto, @arg) = @_;
 	my $class = ref($proto) || $proto;
 	my $self = {};
+
+	# Try to be compatible with previous version of the GSM::SMS package
+	
+	my $specific_transport;
+	my $config_file;
+	my %arg;
+	
+	# First we had one parameter, being the config file
+
+	if ( 1 == @arg ) {
+		$config_file = $arg[0];
+	} else {
+		%arg = @arg;
+
+		$specific_transport = $arg{-transport};
+		$config_file = $arg{-config_file};
+	}
+	
 	bless($self, $class);
 
-	$self->{'__CONFIG_FILE__'} = shift;
-	return undef unless $self->{'__TRANSPORT__'} = GSM::SMS::Transport->new( $self->{'__CONFIG_FILE__'});
-	$self->{'__STACK__'} = GSM::SMS::NBS::Stack->new( -transport => $self->{'__TRANSPORT__'} );	
+	logdbg "debug", "$class constructor called";
+
+	my $transport = GSM::SMS::Transport->new( -transport => $specific_transport,
+											  -config_file => $config_file );
+
+	unless ($transport) {
+		logdbg "debug", "Could not instantiate a transport";
+		logerr "Could not instantiate a transport";
+		return undef;
+	}
+	$self->{'__TRANSPORT__'} = $transport;
+	$self->{'__STACK__'} = GSM::SMS::NBS::Stack->new(-transport => $transport);	
+	
 	return $self;
 }
 
@@ -149,6 +178,26 @@ sub sendSMSTextMessage {
 }
 
 #
+# send picture message
+#
+sub sendPictureMessage_b64 {
+	my ($self, $msisdn, $text, $b64, $format) = @_;
+
+	my $stream = GSM::SMS::OTA::PictureMessage::OTAPictureMessage_fromb64( $text, $b64, $format );
+	return $self->sendto($msisdn, $stream, $GSM::SMS::OTA::PictureMessage::PORT);
+}
+
+#
+# send picture message
+#
+sub sendPictureMessage_file {
+	my ($self, $msisdn, $text, $file) = @_;
+
+	my $stream = GSM::SMS::OTA::PictureMessage::OTAPictureMessage_fromfile( $text, $file);
+	return $self->sendto($msisdn, $stream, $GSM::SMS::OTA::PictureMessage::PORT);
+}
+
+#
 # receive SMS message from stack
 #
 sub receive {
@@ -168,7 +217,10 @@ GSM::SMS::NBS - API for sending and receiving SMS messages.
 
 	use GSM::SMS::NBS;
 
-	my $nbs = GSM::SMS::NBS->new( $transportconfigfile );
+	my $nbs = GSM::SMS::NBS->new( 
+		-transport => $name_of_specific_transport,
+		-config_file => $name_of_configfile
+		);
 	
 	...	
 
@@ -322,6 +374,19 @@ Send a WAP configuration to a WAP capable handset. It expects the following para
 		
 	This feature has been tested on a Nokia 7110, but other Nokia
 	handsets are also supported.	
+
+=head2 sendPictureMessage_file
+
+	$nbs->sendPictureMessage_file( $msisdn, $text, $file );
+
+A picture message is a multipart format, consisting of text and an image. The image can be the double height of a normal GSM picture, i.e. 28 pixels.
+The text can be abything you want, encoded in a ISO8859-1 charset. There are no tests again the validity of the text string though! The image can be delivered in different formats, i.e. gif, png, ... If you want to know which ones, look them up in the B<convert> man page.
+
+=head2 sendPictureMessage_b64
+
+	$nbs->sebdPictureMessage_b64( $msisdn, $text, $b64_encoded_image, $format );
+
+Send a Picture message where the image is encoded in a base64 string. The base64 encoding can be handy when implementing a web based service, in which media files are kept in a RDBMS as base64 encoded strings.
 
 =head2 receive
 
