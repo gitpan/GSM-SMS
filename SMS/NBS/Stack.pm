@@ -46,7 +46,7 @@ sub receive {
 		$self->_garbage_collect($stack);
 
 		select(undef, undef, undef, 0.25);
-		return (-1) unless ($block);
+		return -1 unless $block;
 	}
 	return 0;
 }

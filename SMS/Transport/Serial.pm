@@ -356,7 +356,14 @@ sub _register {
 	my $pc   = $cfg->{"pin-code"};
 	my $csca = $cfg->{"csca"};	
 	
-    	$logger->logentry( "Checking if modem ready .." ) if $logger;    
+    $logger->logentry( "Checking if modem ready .." ) if $logger;    
+
+	# I should speed this 'registering' up ...
+	# ... actually I should have a command that tells me
+	# ready to send|receive ...
+	#
+	# $res = $self->_at("AT+MAGIC?\r", $__TO);
+	# return -1 if ( $res=~/OK/ );
 	
 	# 1. Do we need to give in the PIN ?
 	$res = $self->_at("AT+CPIN?\r", $__TO, "+CPIN:");
@@ -394,6 +401,24 @@ sub _register {
 		$logger->logentry("Modem could not register on network!") if $logger;
 		return 0;
 	}
+
+	# 4. Wait until SIM chip is ready (give it 3 mins) - by checking +cmgf
+    my $simReady = 0;
+    my $stime = time;
+    do {
+        $res = $self->_at("AT+CMGF=0\r", $__TO , "+CMGF");
+        if ( $res=~/OK/i ) {
+            $simReady++;
+        } else {
+            sleep 1;
+        }
+    }
+    until ( $simReady || ((time - $stime) > 180 ) );
+
+    if( $simReady==0 ) {
+        $logger->logentry("SIM will not respond!") if $logger;
+        return 0;
+    }
 
 	# All went fine!
 

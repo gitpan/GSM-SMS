@@ -25,6 +25,7 @@ SMS/OTA/Config.pm
 SMS/OTA/Operatorlogo.pm
 SMS/OTA/RTTTL.pm
 SMS/OTA/VCard.pm
+SMS/Support/RTTTL2MIDI.pm
 examples/smartmessagingserver/README
 examples/smartmessagingserver/sms
 examples/smartmessagingserver/sms.conf

@@ -2,7 +2,7 @@ package GSM::SMS::NBS;
 
 use vars qw($VERSION);
 
-$VERSION = '0.13';
+$VERSION = '0.14';
 
 use GSM::SMS::NBS::Message;
 use GSM::SMS::NBS::Stack;
@@ -35,7 +35,7 @@ sub new {
 #
 sub sendto {
 	my ($self, $msisdn, $message, $dport, $sport, $dcs ) = @_;
-	my $ret;
+	my $ret = 0;
 
 	my $transport = $self->{'__TRANSPORT__'};
 
@@ -45,6 +45,7 @@ sub sendto {
 		# transport->send returns -1 on failure.
 		$ret = -1 if $transport->send($msisdn, $frame);
 	}
+	return $ret;	
 }
 
 #

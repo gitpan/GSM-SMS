@@ -39,12 +39,7 @@ sub send {
 	my ($self, $msisdn, $pdu) = @_;
 
 	my $transport = $self->_route($msisdn);
-	if ( $transport ) {
-		if ( my $result = $transport->send($msisdn, $pdu) ) {
-			# print  "error !\n";
-			return 0;
-		}
-	}
+	return $transport->send($msisdn, $pdu) if $transport;
 	return -1;
 }
 

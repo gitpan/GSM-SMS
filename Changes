@@ -1,5 +1,24 @@
 Revision history for Perl extension GSM::SMS.
 
+0.14  Wed Aug  8 19:13:44 CEST 2001
+	- Release for 1.4 
+
+0.133 Tue Aug  7 22:31:33 CEST 2001
+	- We now have MIDI support!
+	  Added GSM::SMS::Support::RTTTL2MIDI, kindly donated by isminiz 
+	  <ethemevlice@yahoo.com>. Based upon code from G.Babakhani ...
+
+0.132 Tue Aug  7 20:03:30 CEST 2001
+	- Serial transport now waites for the GSM modem to come up. It will
+	  read out the SIM card ( phonebook? ) when first coming up, and
+	  this could cause some trouble. Thanks to Warwick Smith for fixing
+	  this.
+
+0.131 Mon Aug  6 23:11:59 CEST 2001
+	- Updated NBS.pm and Transport.pm. Now the return value from
+	  the Trnsport subsystem really gets into the upper API.
+	  Thanks to Warwick Smith for pointing this one out to me.
+
 0.13 Tue Jul 24 22:45:37 CEST 2001
 	- Updated examples/slashdot/slashdot to be verbose
 	  on not being able to send. Using the new return
