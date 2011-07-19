@@ -31,8 +31,8 @@ sub SMSDeliver {
 	#	length :
 	#		number of octets for BCD + 1 octet for type of number
 	#	type of number :
-	#		81H	:	national number (e.g. 0495123456)
-	#		91H : 	international number (e.g. 32495123456 => need to prepend a '+')	 
+	#		81H	:	national number (e.g. 0495XXXXXX)
+	#		91H : 	international number (e.g. 32495XXXXXX => need to prepend a '+')	 
 	#	BCD:
 	#		If the number of BCD octets is odd, the last digit shall be filled with an end
 	#		mark, coded as FH (H = Hex ...)
@@ -75,8 +75,8 @@ sub SMSDeliver {
 	#	length :
 	#		number of BCD digits 	(This is different for the SCN!)
 	#	type of number :
-	#		81H	:	national number (e.g. 0495123456)
-	#		91H : 	international number (e.g. 32495123456 => need to prepend a '+')	 
+	#		81H	:	national number (e.g. 0495XXXXXX)
+	#		91H : 	international number (e.g. 32495XXXXXX => need to prepend a '+')	 
 	#	BCD:
 	#		If the number of BCD octets is odd, the last digit shall be filled with an end
 	#		mark, coded as FH (H = Hex ...)

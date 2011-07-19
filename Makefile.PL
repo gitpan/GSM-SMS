@@ -6,7 +6,7 @@ use File::Spec;
 use FindBin qw($Bin);
 use lib "$Bin/lib";
 
-our $VERSION = "0.162";
+our $VERSION = "0.163";
 
 my $term;
 
@@ -32,7 +32,7 @@ WriteMakefile(
 	'CONFIGURE'		=> \&configure,
 	'dist'			=> {
 		PREOP => 'pod2text docs/README.pod > $(DISTVNAME)/README',
-		DIST_DEFAULT => 'all_tardist',
+		DIST_DEFAULT => 'all tardist',
 		COMPRESS => 'gzip -9f'
 	}
 );

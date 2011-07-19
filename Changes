@@ -1,5 +1,8 @@
 Revision history for Perl extension GSM::SMS.
 
+0.163 Tue Jul 19 17:54:00 CEST 2011
+    - Documentation change upon request.
+
 0.162 Fri Jan  2 19:35:46 PST 2004
 	- An bugfix release with some old bugs fixed. This is the last of the
 	  0.16X seriesn as 0.17X is being build for WAP Push and preliminary
